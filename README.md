@@ -33,14 +33,14 @@ _Swift Package Manager_
 
 ```
 dependencies: [
-    .package(url: "https://github.com/dumitruigor/TTSegmentedControl.git", branch: "swiftPackage")
+    .package(url: "https://github.com/artsimonyan23/TTSegmentedControl.git")
 ]
 ```
 
 _CocoaPods_
 
 ```ruby
-  pod 'TTSegmentedControl', :git => 'https://github.com/dumitruigor/TTSegmentedControl.git', :branch => 'swiftPackage'
+  pod 'TTSegmentedControl', :git => 'https://github.com/artsimonyan23/TTSegmentedControl'
 ```
 
 _Carthage_
