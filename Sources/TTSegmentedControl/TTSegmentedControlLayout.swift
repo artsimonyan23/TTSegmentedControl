@@ -112,7 +112,8 @@ extension TTSegmentedControlLayout {
                 selectedTitleComponentsFrames: selectedTitleComponentsFrames,
                 index: index,
                 padding: params.padding,
-                selectionViewFillType: params.selectionViewFillType
+                selectionViewFillType: params.selectionViewFillType, 
+                titleDistribution: params.titleDistribution
             )
             let frame = frameBuilder.build()
             frames.append(frame)

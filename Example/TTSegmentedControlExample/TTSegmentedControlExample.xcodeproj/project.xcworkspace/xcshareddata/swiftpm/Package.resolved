@@ -1,14 +1,15 @@
 {
+  "originHash" : "ad9d9006ba457cb2e86018c646743120bed19f232e76d8eb9f560cf96f87d3db",
   "pins" : [
     {
       "identity" : "ttsegmentedcontrol",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/dumitruigor/TTSegmentedControl",
+      "location" : "https://github.com/artsimonyan23/TTSegmentedControl",
       "state" : {
-        "branch" : "swiftPackage",
-        "revision" : "74c04ff4e98d0a6e8fc8382908279e4d7b841ad1"
+        "revision" : "fb46de663a9cdd585f500d17d3fdcfd59367bac3",
+        "version" : "0.5.0"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

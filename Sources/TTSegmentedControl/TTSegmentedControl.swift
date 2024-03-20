@@ -43,7 +43,7 @@ public final class TTSegmentedControl: UIView {
     public var cornerCurve: CALayerCornerCurve = .circular { didSet { reloadView() } }
     public var titles: [TTSegmentedControlTitle] = [] { didSet { reloadView() } }
     public var isSwitchBehaviorEnabled: Bool = false
-    
+
     private(set) var containerViewInnerShadowLayer = CALayer()
     private(set) var defaultStateView = UIView()
     private(set) var defaultStateViewGradientLayer = CAGradientLayer()
@@ -52,7 +52,7 @@ public final class TTSegmentedControl: UIView {
     private(set) var selectionViewInnerShadowLayer = CALayer()
     private(set) var selectionViewMask = UIView()
     private(set) var selectedStateView = UIView()
-    
+
     private var isSelectionViewTouched = false
     private var isValidTouch = true
     private var isLayoutUpdated = false
@@ -61,28 +61,63 @@ public final class TTSegmentedControl: UIView {
     private var touchPointOffset: CGPoint = .zero
     private var touchState: TouchState = .none
     private lazy var layout: TTSegmentedControlLayout = { .init(view: self) }()
-    
-    public override func layoutSubviews() {
+
+    override public func layoutSubviews() {
         super.layoutSubviews()
-        
+
         if !isLayoutUpdated {
             isLayoutUpdated = true
             prepare()
             configure()
         }
-        
+
         if touchState == .none {
             updateLayout()
         }
     }
-    
+
     private func updateLayout() {
+        let defaultTitlesSizes: [CGSize]
+        let selectedTitlesSizes: [CGSize]
+        let imagesSizes = titles.map({ $0.availableImageSize })
+
+        if isSizeAdjustEnabled {
+            defaultTitlesSizes = titles.map({ $0.availableDefaultAttributedText.textSize })
+            selectedTitlesSizes = titles.map({ $0.availableSelectedAttributedText.textSize })
+        } else {
+            switch titleDistribution {
+            case .fillEqually:
+                let sectionWidth = titles.count == 0
+                    ? 0
+                    : bounds.width / CGFloat(titles.count) - 2 * padding.width
+                defaultTitlesSizes = titles.map({ title in
+                    var size = title.availableDefaultAttributedText.textSize
+                    if isSizeAdjustEnabled {
+                        size.width = min(size.width, sectionWidth - ((title.imagePosition == .left || title.imagePosition == .right) ? (title.availableImageSize.width + title.spaceBetweenTextAndImage) : 0))
+                    }
+                    return size
+                })
+                selectedTitlesSizes = titles.map({ title in
+                    var size = title.availableSelectedAttributedText.textSize
+                    if isSizeAdjustEnabled, titleDistribution == .fillEqually {
+                        size.width = min(size.width, sectionWidth - ((title.imagePosition == .left || title.imagePosition == .right) ? (title.availableImageSize.width + title.spaceBetweenTextAndImage) : 0))
+                    }
+                    return size
+                })
+
+            case .equalSpacing:
+                // TODO: Add logic for long strings
+                defaultTitlesSizes = titles.map({ $0.availableDefaultAttributedText.textSize })
+                selectedTitlesSizes = titles.map({ $0.availableSelectedAttributedText.textSize })
+            }
+        }
+
         let layoutParams = LayoutParameter(
-            defaultTitlesSizes: titles.map({$0.availableDefaultAttributedText.textSize}),
-            selectedTitlesSizes: titles.map({$0.availableSelectedAttributedText.textSize}),
-            spaceBetweenTitleItems: titles.map({$0.spaceBetweenTextAndImage}),
-            imagesSizes: titles.map({$0.availableImageSize}),
-            imagePositions: titles.map({$0.imagePosition}),
+            defaultTitlesSizes: defaultTitlesSizes,
+            selectedTitlesSizes: selectedTitlesSizes,
+            spaceBetweenTitleItems: titles.map({ $0.spaceBetweenTextAndImage }),
+            imagesSizes: imagesSizes,
+            imagePositions: titles.map({ $0.imagePosition }),
             selectedIndex: selectedIndex,
             padding: padding,
             cornerRadius: cornerRadius,
@@ -96,7 +131,7 @@ public final class TTSegmentedControl: UIView {
         )
         layout.layoutSubviews(with: layoutParams)
     }
-    
+
     private func reloadView() {
         prepare()
         configure()
@@ -104,23 +139,24 @@ public final class TTSegmentedControl: UIView {
     }
 }
 
-//MARK: - Touches
+// MARK: - Touches
+
 extension TTSegmentedControl {
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let point = touches.first?.location(in: self) else { return }
         touchBegin(at: point)
     }
 
-    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let point = touches.first?.location(in: self) else { return }
         endTouch(at: point)
     }
-    
+
     private func prepareTouchPointOffset(for point: CGPoint) {
         if !touchPointOffset.equalTo(.zero) { return }
         touchPointOffset = CGPoint(x: selectionView.center.x - point.x, y: selectionView.center.x)
     }
-    
+
     private func updateSelectionViewFrame(at index: Int) {
         guard let animationOptions = animationOptions else {
             layout.layoutSelectionViewAndMaskView(at: index)
@@ -136,7 +172,7 @@ extension TTSegmentedControl {
             }
         }
     }
-    
+
     private func switchIndexForSelected(_ index: Int) -> Int {
         if !isSwitch { return index }
         if index == selectedIndex {
@@ -145,11 +181,11 @@ extension TTSegmentedControl {
             return index
         }
     }
-    
+
     @objc private func panAction(_ gestureRecognizer: UIPanGestureRecognizer) {
         let state = gestureRecognizer.state
         let point = gestureRecognizer.location(in: self)
-        
+
         switch state {
         case .began:
             touchBegin(at: point)
@@ -169,7 +205,7 @@ extension TTSegmentedControl {
         isSelectionViewTouched = index == selectedIndex
         notifyBeginTouch(for: index)
     }
-    
+
     private func panAction(at point: CGPoint) {
         if !isDragEnabled || !isSelectionViewTouched {
             isValidTouch = PointInsideSegmentControlCheckBuilder(viewBounds: bounds, point: point).build()
@@ -183,12 +219,12 @@ extension TTSegmentedControl {
         lastTouchPoint = point
         notifyDragInProgress(at: point)
     }
-    
+
     private func endTouch(at point: CGPoint) {
         isSelectionViewTouched = false
         touchState = .none
         touchPointOffset = .zero
-        
+
         if !isValidTouch { return }
         let newIndex = switchIndexForSelected(layout.index(for: point))
         let allowToMoveToNewIndex = delegate?.segmentedView(self, shouldMoveAt: newIndex) ?? true
@@ -201,23 +237,25 @@ extension TTSegmentedControl {
     }
 }
 
-//MARK: - Public
+// MARK: - Public
+
 extension TTSegmentedControl {
     public func selectItem(at index: Int, animated: Bool = false) {
-        let index = max(min(index, titles.count - 1),  0)
+        let index = max(min(index, titles.count - 1), 0)
         selectedIndex = index
         updateSelectionViewFrame(at: index)
         configureSelectionView(at: selectedIndex)
     }
-    
+
     public func titleForItem(at index: Int) -> TTSegmentedControlTitle? {
         if titles.count == 0 { return nil }
-        let index = max(min(index, titles.count - 1),  0)
+        let index = max(min(index, titles.count - 1), 0)
         return titles[index]
     }
 }
 
-//MARK: - Prepare
+// MARK: - Prepare
+
 extension TTSegmentedControl {
     private func prepare() {
         removeAllSubviews()
@@ -239,30 +277,30 @@ extension TTSegmentedControl {
     }
 
     private func removeAllSubviews() {
-        subviews.forEach({$0.removeFromSuperview()})
+        subviews.forEach({ $0.removeFromSuperview() })
     }
-    
+
     private func prepareView() {
         backgroundColor = .clear
     }
-    
+
     private func prepareContainerView() {
         defaultStateView = UIView()
         prepareLabelsHolder(defaultStateView)
     }
-    
+
     private func prepareContainerGradientLayer() {
         defaultStateViewGradientLayer = CAGradientLayer()
         defaultStateView.layer.addSublayer(defaultStateViewGradientLayer)
     }
-    
+
     private func prepareContainerViewInnerShadowLayer() {
         containerViewInnerShadowLayer = CALayer()
         defaultStateView.layer.addSublayer(containerViewInnerShadowLayer)
     }
-    
+
     private func prepareDefaultStateLabels() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let label = UILabel()
             label.attributedText = titles[index].availableDefaultAttributedText
             label.tag = index + 1
@@ -270,46 +308,46 @@ extension TTSegmentedControl {
             defaultStateView.addSubview(label)
         }
     }
-    
+
     private func prepareDefaultStateImagesViews() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let imageView = UIImageView()
             imageView.tag = index + 1
             defaultStateView.addSubview(imageView)
         }
     }
-    
+
     private func prepareSelectionViewGradientLayer() {
         selectionViewGradientLayer = CAGradientLayer()
         selectionView.layer.addSublayer(selectionViewGradientLayer)
     }
-    
+
     private func prepareSelectionViewInnerShadowLayer() {
         selectionViewInnerShadowLayer = CALayer()
         selectionView.layer.addSublayer(selectionViewInnerShadowLayer)
     }
-    
+
     private func prepareSelectionView() {
         selectionView = UIView()
         selectionView.isUserInteractionEnabled = false
         addSubview(selectionView)
     }
-    
+
     private func prepareSelectionViewMask() {
         selectionViewMask = UIView()
         selectionViewMask.isUserInteractionEnabled = false
         selectionViewMask.backgroundColor = .black
     }
-    
+
     private func prepareSelectedLabelsView() {
         selectedStateView = UIView()
         selectedStateView.mask = selectionViewMask
         selectedStateView.backgroundColor = .clear
         prepareLabelsHolder(selectedStateView)
     }
-    
+
     private func prepareSelectedStateLabels() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let label = UILabel()
             label.isUserInteractionEnabled = false
             label.attributedText = titles[index].availableSelectedAttributedText
@@ -318,16 +356,16 @@ extension TTSegmentedControl {
             selectedStateView.addSubview(label)
         }
     }
-    
+
     private func prepareSelectedStateImagesViews() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let imageView = UIImageView()
             imageView.tag = index + 1
             imageView.isUserInteractionEnabled = false
             selectedStateView.addSubview(imageView)
         }
     }
-    
+
     private func prepareLabelsHolder(_ view: UIView) {
         view.frame = bounds
         view.isUserInteractionEnabled = false
@@ -335,19 +373,20 @@ extension TTSegmentedControl {
         addSubview(view)
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     }
-    
+
     private func prepareSelectedSegmentedIndex() {
         selectedIndex = min(selectedIndex, max(0, titles.count - 1))
     }
-    
+
     private func preparePanGestureRecognizer() {
-        if gestureRecognizers?.compactMap({$0 as? TestablePanGestureRecognizer}).first != nil { return }
+        if gestureRecognizers?.compactMap({ $0 as? TestablePanGestureRecognizer }).first != nil { return }
         let panGestureRecognizer = TestablePanGestureRecognizer(target: self, action: #selector(panAction(_:)))
         addGestureRecognizer(panGestureRecognizer)
     }
 }
 
-//MARK: - Configure subviews
+// MARK: - Configure subviews
+
 extension TTSegmentedControl {
     private func configure() {
         configureContainerView()
@@ -363,11 +402,11 @@ extension TTSegmentedControl {
         configureSelectedStateLabels()
         configureSelectedStateImageViews()
     }
-    
+
     private func configureContainerView() {
         defaultStateView.backgroundColor = containerColorType.color
     }
-    
+
     private func configureContainerGradientLayer() {
         defaultStateViewGradientLayer.isHidden = containerColorType.gradient == nil
         defaultStateViewGradientLayer.backgroundColor = UIColor.clear.cgColor
@@ -375,7 +414,7 @@ extension TTSegmentedControl {
             defaultStateViewGradientLayer.apply(containerGradient)
         }
     }
-    
+
     private func configureContainerViewInnerShadowLayer() {
         guard let containerInnerShadow = containerViewInnerShadow else { return }
         containerViewInnerShadowLayer.shadowColor = containerInnerShadow.color.cgColor
@@ -384,36 +423,36 @@ extension TTSegmentedControl {
         containerViewInnerShadowLayer.shadowRadius = containerInnerShadow.radius
         containerViewInnerShadowLayer.masksToBounds = true
     }
-    
+
     private func configureContainerViewBorder() {
         guard let containerBorder = containerViewBorder else { return }
         defaultStateView.layer.borderWidth = containerBorder.lineWidth
         defaultStateView.layer.borderColor = containerBorder.color.cgColor
     }
-    
+
     private func configureDefaultStateLabels() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let tag = index + 1
-            guard let label = defaultStateView.subviews.compactMap({$0 as? UILabel}).first(where: {$0.tag == tag}) else { continue }
+            guard let label = defaultStateView.subviews.compactMap({ $0 as? UILabel }).first(where: { $0.tag == tag }) else { continue }
             label.attributedText = titles[index].availableDefaultAttributedText
         }
     }
-    
+
     private func configureDefaultStateImageViews() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let tag = index + 1
-            guard let imageView = defaultStateView.subviews.compactMap({$0 as? UIImageView}).first(where: {$0.tag == tag}) else { continue }
+            guard let imageView = defaultStateView.subviews.compactMap({ $0 as? UIImageView }).first(where: { $0.tag == tag }) else { continue }
             imageView.image = titles[index].defaultImage
         }
     }
-    
+
     private func configureSelectionViewGradientLayer() {
         selectionViewGradientLayer.isHidden = selectionViewColorType.gradient == nil
         if let selectionViewGradient = selectionViewColorType.gradient {
             selectionViewGradientLayer.apply(selectionViewGradient)
         }
     }
-    
+
     private func configureSelectionViewInnerShadowLayer() {
         guard let selectionViewInnerShadow = selectionViewInnerShadow else { return }
         selectionViewInnerShadowLayer.shadowColor = selectionViewInnerShadow.color.cgColor
@@ -422,7 +461,7 @@ extension TTSegmentedControl {
         selectionViewInnerShadowLayer.shadowRadius = selectionViewInnerShadow.radius
         selectionViewInnerShadowLayer.masksToBounds = true
     }
-    
+
     private func configureSelectionView() {
         selectionView.backgroundColor = selectionViewColorType.color
         if let shadow = selectionViewShadow {
@@ -432,7 +471,7 @@ extension TTSegmentedControl {
             selectionView.apply(border)
         }
     }
-    
+
     private func configureSwitchSecondSelectionViewGradientLayer() {
         let gradient = switchSecondSelectionViewColorType?.gradient ?? selectionViewColorType.gradient
         selectionViewGradientLayer.isHidden = gradient == nil
@@ -440,11 +479,11 @@ extension TTSegmentedControl {
             selectionViewGradientLayer.apply(gradient)
         }
     }
-    
+
     private func configureSwitchSecondSelectionView() {
         selectionView.backgroundColor = switchSecondSelectionViewColorType?.color ?? selectionViewColorType.color
     }
-    
+
     private func configureSelectionView(at index: Int) {
         if !isSwitch { return }
         if index == 0 {
@@ -455,37 +494,38 @@ extension TTSegmentedControl {
             configureSwitchSecondSelectionView()
         }
     }
-    
+
     private func configureSelectedStateLabels() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let tag = index + 1
-            guard let label = selectedStateView.subviews.compactMap({$0 as? UILabel}).first(where: {$0.tag == tag}) else { continue }
+            guard let label = selectedStateView.subviews.compactMap({ $0 as? UILabel }).first(where: { $0.tag == tag }) else { continue }
             label.attributedText = titles[index].availableSelectedAttributedText
         }
     }
-    
+
     private func configureSelectedStateImageViews() {
-        for index in 0..<titles.count {
+        for index in 0 ..< titles.count {
             let tag = index + 1
-            guard let imageView = selectedStateView.subviews.compactMap({$0 as? UIImageView}).first(where: {$0.tag == tag}) else { continue }
+            guard let imageView = selectedStateView.subviews.compactMap({ $0 as? UIImageView }).first(where: { $0.tag == tag }) else { continue }
             imageView.image = titles[index].selectedImage
         }
     }
 }
 
-//MARK: - Notify
+// MARK: - Notify
+
 extension TTSegmentedControl {
     private func notifyBeginTouch(for index: Int) {
         if index == selectedIndex { return }
         delegate?.segmentedViewDidBegin(self)
     }
-    
+
     private func notifyDragInProgress(at point: CGPoint) {
         guard let delegate = delegate else { return }
         let index = layout.index(for: point)
         delegate.segmentedView(self, didDragAt: index)
     }
-    
+
     private func notifyEndTouch() {
         delegate?.segmentedView(self, didEndAt: selectedIndex)
     }
@@ -497,23 +537,23 @@ extension TTSegmentedControl {
         case drag
         case touch
     }
-    
+
     public enum TitleDistribution {
         case fillEqually
         case equalSpacing
     }
-    
+
     public enum SelectionViewFillType {
         case fillSegment
         case fillText
     }
-    
+
     public enum CornerRadius {
         case none
         case maximum
         case constant(value: CGFloat)
     }
-    
+
     public enum ColorType {
         case color(value: UIColor)
         case gradient(value: TTSegmentedControlGradient)
@@ -524,20 +564,20 @@ extension TTSegmentedControl {
 extension TTSegmentedControl.ColorType {
     var color: UIColor? {
         switch self {
-        case .color(let value):
+        case let .color(value):
             return value
-        case .colorWithGradient(let color, _):
+        case let .colorWithGradient(color, _):
             return color
         default:
             return nil
         }
     }
-    
+
     var gradient: TTSegmentedControlGradient? {
         switch self {
-        case .gradient(let value):
+        case let .gradient(value):
             return value
-        case .colorWithGradient(_, let gradient):
+        case let .colorWithGradient(_, gradient):
             return gradient
         default:
             return nil

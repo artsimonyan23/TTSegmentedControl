@@ -74,7 +74,7 @@ extension TitleComponentFrameListBuilder {
                 whenImagePositionIsOn: imagePosition
             )
 
-            let iamageFrame = imageFrame(
+            let imageFrame = imageFrame(
                 inside: imageAndTextTotalFrame,
                 for: textSize,
                 and: imageSize,
@@ -83,7 +83,7 @@ extension TitleComponentFrameListBuilder {
             
             let componentsFrame = TitleComponentFrame(
                 text: textFrame,
-                image: iamageFrame,
+                image: imageFrame,
                 total: maxTitleItemFrame
             )
             

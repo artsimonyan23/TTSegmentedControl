@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		783A217029C1E8840031B5F5 /* TTSegmentedControl in Frameworks */ = {isa = PBXBuildFile; productRef = 783A216F29C1E8840031B5F5 /* TTSegmentedControl */; };
+		75706FFB2BAAFC8200C0AF4F /* TTSegmentedControl in Frameworks */ = {isa = PBXBuildFile; productRef = 75706FFA2BAAFC8200C0AF4F /* TTSegmentedControl */; };
 		783A217729C1E9070031B5F5 /* UIFont+Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783A217629C1E9070031B5F5 /* UIFont+Name.swift */; };
 		783A217929C1E9AC0031B5F5 /* PTSerif-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 783A217829C1E9AC0031B5F5 /* PTSerif-Bold.ttf */; };
 		783D0EC92A11518A00F606AE /* SigmarOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 783D0EC72A11518A00F606AE /* SigmarOne-Regular.ttf */; };
@@ -58,13 +58,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				783A217029C1E8840031B5F5 /* TTSegmentedControl in Frameworks */,
+				75706FFB2BAAFC8200C0AF4F /* TTSegmentedControl in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		75706FF52BAAF41800C0AF4F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		783A217129C1E88A0031B5F5 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -102,6 +109,7 @@
 			children = (
 				785CD71E29967597001C5FDB /* TTSegmentedControlExample */,
 				785CD71D29967597001C5FDB /* Products */,
+				75706FF52BAAF41800C0AF4F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -157,7 +165,7 @@
 			);
 			name = TTSegmentedControlExample;
 			packageProductDependencies = (
-				783A216F29C1E8840031B5F5 /* TTSegmentedControl */,
+				75706FFA2BAAFC8200C0AF4F /* TTSegmentedControl */,
 			);
 			productName = TTSegmentedControlExample;
 			productReference = 785CD71C29967597001C5FDB /* TTSegmentedControlExample.app */;
@@ -188,7 +196,7 @@
 			);
 			mainGroup = 785CD71329967597001C5FDB;
 			packageReferences = (
-				783A216E29C1E8840031B5F5 /* XCRemoteSwiftPackageReference "TTSegmentedControl" */,
+				75706FF92BAAFC8200C0AF4F /* XCRemoteSwiftPackageReference "TTSegmentedControl" */,
 			);
 			productRefGroup = 785CD71D29967597001C5FDB /* Products */;
 			projectDirPath = "";
@@ -446,20 +454,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		783A216E29C1E8840031B5F5 /* XCRemoteSwiftPackageReference "TTSegmentedControl" */ = {
+		75706FF92BAAFC8200C0AF4F /* XCRemoteSwiftPackageReference "TTSegmentedControl" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dumitruigor/TTSegmentedControl";
+			repositoryURL = "https://github.com/artsimonyan23/TTSegmentedControl";
 			requirement = {
-				branch = swiftPackage;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		783A216F29C1E8840031B5F5 /* TTSegmentedControl */ = {
+		75706FFA2BAAFC8200C0AF4F /* TTSegmentedControl */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 783A216E29C1E8840031B5F5 /* XCRemoteSwiftPackageReference "TTSegmentedControl" */;
+			package = 75706FF92BAAFC8200C0AF4F /* XCRemoteSwiftPackageReference "TTSegmentedControl" */;
 			productName = TTSegmentedControl;
 		};
 /* End XCSwiftPackageProductDependency section */
